@@ -29,6 +29,7 @@ class _SettingsFormState extends State<SettingsForm> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             UserData userDataStream = (snapshot.data as UserData);
+
             return Form(
                 key: _formKey,
                 child: Column(
@@ -37,62 +38,70 @@ class _SettingsFormState extends State<SettingsForm> {
                     SizedBox(
                       height: 10.0,
                     ),
-                    TextFormField(
-                      initialValue: userDataStream.name,
-                      decoration: textInputDecoration,
-                      validator: (val) => val!.isEmpty ? 'Enter a name.' : null,
-                      onChanged: (val) => setState(() => _currentName = val),
-                    ),
+                    enterName(userDataStream),
                     SizedBox(
                       height: 30.0,
                     ),
-                    DropdownButtonFormField(
-                        value: (_currentSugar ?? userDataStream.sugar!),
-                        onChanged: (val) =>
-                            setState(() => _currentSugar = val.toString()),
-                        items: sugarLevel.map((sugar) {
-                          return DropdownMenuItem(
-                              value: sugar, child: Text('$sugar sugars'));
-                        }).toList()),
+                    sugar(userDataStream),
                     SizedBox(
                       height: 30.0,
                     ),
-                    Slider(
-                      value: (_currentStrength ?? userDataStream.strength!)
-                          .toDouble(),
-                      min: 100.0,
-                      max: 900.0,
-                      divisions: 8,
-                      onChanged: (val) =>
-                          setState(() => _currentStrength = val.round()),
-                      activeColor: Colors
-                          .brown[_currentStrength ?? userDataStream.strength!],
-                      inactiveColor: Colors
-                          .brown[_currentStrength ?? userDataStream.strength!],
-                    ),
+                    coffeeStrength(userDataStream),
                     SizedBox(
                       height: 30.0,
                     ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          await DatabaseService(uid: user?.userid)
-                              .updateUserData(
-                                  _currentSugar ?? userDataStream.sugar!,
-                                  _currentName ?? userDataStream.name!,
-                                  _currentStrength ?? userDataStream.strength!);
-                        }
-                      },
-                      child: Text('Update'),
-                      style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.pink)),
-                    )
+                    updateButton(userDataStream, user)
                   ],
                 ));
           } else {
             return Loading();
           }
         });
+  }
+
+  TextFormField enterName(userDataStream) {
+    return TextFormField(
+      initialValue: userDataStream.name,
+      decoration: textInputDecoration,
+      validator: (val) => val!.isEmpty ? 'Enter a name.' : null,
+      onChanged: (val) => setState(() => _currentName = val),
+    );
+  }
+
+  DropdownButtonFormField sugar(userDataStream) {
+    return DropdownButtonFormField(
+        value: (_currentSugar ?? userDataStream.sugar!),
+        onChanged: (val) => setState(() => _currentSugar = val.toString()),
+        items: sugarLevel.map((sugar) {
+          return DropdownMenuItem(value: sugar, child: Text('$sugar sugars'));
+        }).toList());
+  }
+
+  Slider coffeeStrength(userDataStream) {
+    return Slider(
+      value: (_currentStrength ?? userDataStream.strength!).toDouble(),
+      min: 100.0,
+      max: 900.0,
+      divisions: 8,
+      onChanged: (val) => setState(() => _currentStrength = val.round()),
+      activeColor: Colors.brown[_currentStrength ?? userDataStream.strength!],
+      inactiveColor: Colors.brown[_currentStrength ?? userDataStream.strength!],
+    );
+  }
+
+  ElevatedButton updateButton(userDataStream, user) {
+    return ElevatedButton(
+      onPressed: () async {
+        if (_formKey.currentState!.validate()) {
+          await DatabaseService(uid: user?.userid).updateUserData(
+              _currentSugar ?? userDataStream.sugar!,
+              _currentName ?? userDataStream.name!,
+              _currentStrength ?? userDataStream.strength!);
+        }
+      },
+      child: Text('Update'),
+      style:
+          ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.pink)),
+    );
   }
 }
